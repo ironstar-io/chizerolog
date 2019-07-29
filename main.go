@@ -37,7 +37,7 @@ func LoggerMiddleware(logger *zerolog.Logger) func(next http.Handler) http.Handl
 					Timestamp().
 					Fields(map[string]interface{}{
 						"remote_ip":  r.RemoteAddr,
-						"url":        r.URL,
+						"url":        r.URL.Path,
 						"proto":      r.Proto,
 						"method":     r.Method,
 						"user_agent": r.Header.Get("User-Agent"),
