@@ -22,22 +22,31 @@ func LoggerMiddleware(logger *zerolog.Logger) func(next http.Handler) http.Handl
 
 				// Recover and record stack traces in case of a panic
 				if rec := recover(); rec != nil {
-					log.Error().Timestamp().Interface("recover_info", rec).Bytes("debug_stack", debug.Stack()).Msg("error_request")
+					log.Error().
+						Str("type", "error").
+						Timestamp().
+						Interface("recover_info", rec).
+						Bytes("debug_stack", debug.Stack()).
+						Msg("log system error")
 					http.Error(ww, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 				}
 
 				// log end request
-				log.Info().Timestamp().Fields(map[string]interface{}{
-					"remote_ip":  r.RemoteAddr,
-					"uri":        r.RequestURI,
-					"proto":      r.Proto,
-					"method":     r.Method,
-					"user_agent": r.Header.Get("User-Agent"),
-					"status":     ww.Status(),
-					"latency_ms": float64(t2.Sub(t1).Nanoseconds()) / 1000.0,
-					"bytes_in":   r.Header.Get("Content-Length"),
-					"bytes_out":  ww.BytesWritten(),
-				}).Msg("handled_request")
+				log.Info().
+					Str("type", "access").
+					Timestamp().
+					Fields(map[string]interface{}{
+						"remote_ip":  r.RemoteAddr,
+						"url":        r.URL,
+						"proto":      r.Proto,
+						"method":     r.Method,
+						"user_agent": r.Header.Get("User-Agent"),
+						"status":     ww.Status(),
+						"latency_ms": float64(t2.Sub(t1).Nanoseconds()) / 1000000.0,
+						"bytes_in":   r.Header.Get("Content-Length"),
+						"bytes_out":  ww.BytesWritten(),
+					}).
+					Msg("incoming_request")
 			}()
 
 			next.ServeHTTP(ww, r)
